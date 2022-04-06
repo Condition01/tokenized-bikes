@@ -6,8 +6,10 @@ import br.com.tokenizedbikes.states.BikeTokenState
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.utilities.withNotary
 import com.r3.corda.lib.tokens.workflows.flows.rpc.CreateEvolvableTokens
+import net.corda.core.flows.FlowException
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.StartableByRPC
+import net.corda.core.node.services.queryBy
 import net.corda.core.utilities.ProgressTracker
 
 @StartableByRPC
@@ -42,6 +44,12 @@ class CreateBikeTokenFlow(
             maintainer = ourIdentity
         )
 
+        val bikeStateAndRef = serviceHub.vaultService.queryBy<BikeTokenState>().states
+            .filter { it.state.data.serialNumber == bikeState.serialNumber }
+
+        if(bikeStateAndRef.isNotEmpty())
+            throw FlowException("A BikeState with same 'serialNumber' - ${bikeState.serialNumber} already exists")
+
         val transactionState = bikeState withNotary notary
 
         progressTracker.currentStep = CALLING_EVOLVABLE_TRANSACTION
@@ -51,7 +59,7 @@ class CreateBikeTokenFlow(
         return BaseBikeFlowResponse(
             txId =  stx.id.toHexString(),
             bikeSerialNumber = bikeState.serialNumber
-        );
+        )
     }
 
 }

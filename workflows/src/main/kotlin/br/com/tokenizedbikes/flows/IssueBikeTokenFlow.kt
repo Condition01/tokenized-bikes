@@ -48,6 +48,7 @@ class IssueBikeTokenFlow(
 
         val bikeIssuedTokenType = bikeTokenPointer issuedBy ourIdentity
 
+        /* Default - Non Fungible Token */
         val bikeToken = bikeIssuedTokenType heldBy holder
 
         progressTracker.currentStep = CALLING_ISSUE_FLOW
