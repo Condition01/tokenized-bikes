@@ -4,7 +4,6 @@ import br.com.tokenizedbikes.flows.models.BaseBikeFlowResponse
 import br.com.tokenizedbikes.models.BikeUpdateModelDTO
 import br.com.tokenizedbikes.service.VaultCommonQueryService
 import br.com.tokenizedbikes.states.BikeTokenState
-import br.com.tokenizedbikes.utils.QueryUtils
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.workflows.flows.evolvable.UpdateEvolvableTokenFlow
 import com.r3.corda.lib.tokens.workflows.flows.evolvable.UpdateEvolvableTokenFlowHandler

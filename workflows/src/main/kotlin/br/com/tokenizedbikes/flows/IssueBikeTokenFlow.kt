@@ -2,11 +2,7 @@ package br.com.tokenizedbikes.flows
 
 import br.com.tokenizedbikes.flows.models.BikeIssueFlowResponse
 import br.com.tokenizedbikes.service.VaultBikeTokenQueryService
-import br.com.tokenizedbikes.service.VaultCommonQueryService
-import br.com.tokenizedbikes.states.BikeTokenState
 import co.paralleluniverse.fibers.Suspendable
-import com.r3.corda.lib.tokens.contracts.types.TokenPointer
-import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
 import com.r3.corda.lib.tokens.workflows.utilities.heldBy
@@ -14,7 +10,6 @@ import net.corda.core.flows.FlowException
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.StartableByRPC
 import net.corda.core.identity.Party
-import net.corda.core.node.services.queryBy
 import net.corda.core.utilities.ProgressTracker
 
 @StartableByRPC

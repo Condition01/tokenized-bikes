@@ -1,11 +1,16 @@
 package br.com.tokenizedbikes.models
 
-data class BikeModelDTO (
+import net.corda.core.serialization.CordaSerializable
+
+@CordaSerializable
+data class BikeModelDTO(
     val brand: String,
     val modelName: String,
     val color: BikeColor,
     val bikeImageURL: String,
     val serialNumber: String,
     val year: Int,
-    val percentOfConservation: Double
-        )
+    val percentOfConservation: Double,
+    val dollarPrice: Double,
+    val isNew: Boolean
+)

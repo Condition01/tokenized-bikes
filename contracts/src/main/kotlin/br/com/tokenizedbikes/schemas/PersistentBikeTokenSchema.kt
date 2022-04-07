@@ -1,3 +1,3 @@
-package br.com.tokenizedbikes.models.schemas
+package br.com.tokenizedbikes.schemas
 
 object PersistentBikeTokenSchema

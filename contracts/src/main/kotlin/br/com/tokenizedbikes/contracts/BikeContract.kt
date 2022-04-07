@@ -1,28 +1,24 @@
 package br.com.tokenizedbikes.contracts
 
-import br.com.tokenizedbikes.states.TemplateState
+import br.com.tokenizedbikes.states.BikeTokenState
+import com.r3.corda.lib.tokens.contracts.EvolvableTokenContract
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.Contract
-import net.corda.core.contracts.requireSingleCommand
 import net.corda.core.contracts.requireThat
 import net.corda.core.transactions.LedgerTransaction
 
-class BikeContract : Contract {
+class BikeContract : EvolvableTokenContract(), Contract {
     companion object {
         const val ID = "br.com.tokenizedbikes.contracts.BikeContract"
     }
 
-    override fun verify(tx: LedgerTransaction) {
-        val command = tx.commands.requireSingleCommand<Commands.Issue>()
-        val output = tx.outputsOfType<TemplateState>().first()
-        when (command.value) {
-            is Commands.Issue -> requireThat {
-
-            }
+    override fun additionalCreateChecks(tx: LedgerTransaction) {
+        requireThat {
+            val newToken = tx.outputStates.single() as BikeTokenState
+            "Serial Number cant be empty".using(newToken.serialNumber != "")
         }
     }
 
-    interface Commands : CommandData {
-        class Issue : Commands
+    override fun additionalUpdateChecks(tx: LedgerTransaction) {
     }
 }

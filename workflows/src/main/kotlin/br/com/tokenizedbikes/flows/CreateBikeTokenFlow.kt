@@ -10,7 +10,6 @@ import com.r3.corda.lib.tokens.workflows.flows.rpc.CreateEvolvableTokens
 import net.corda.core.flows.FlowException
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.StartableByRPC
-import net.corda.core.node.services.queryBy
 import net.corda.core.utilities.ProgressTracker
 
 @StartableByRPC
