@@ -9,13 +9,11 @@ import com.r3.corda.lib.tokens.workflows.flows.evolvable.UpdateEvolvableTokenFlo
 import com.r3.corda.lib.tokens.workflows.flows.evolvable.UpdateEvolvableTokenFlowHandler
 import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.UpdateDistributionListFlow
 import net.corda.core.contracts.UniqueIdentifier
-import net.corda.core.flows.FlowLogic
-import net.corda.core.flows.FlowSession
-import net.corda.core.flows.InitiatedBy
-import net.corda.core.flows.InitiatingFlow
+import net.corda.core.flows.*
 
 object UpdateBikeTokenFlow {
 
+    @StartableByRPC
     @InitiatingFlow
     class UpdateBikeTokenInitiatingFlow(
         private val linearId: UniqueIdentifier,
@@ -56,7 +54,7 @@ object UpdateBikeTokenFlow {
     }
 
     @InitiatedBy(UpdateBikeTokenInitiatingFlow::class)
-    class UpdateBikeTokenResponderFlow(val counterPartySession: FlowSession): FlowLogic<Unit>() {
+    class UpdateBikeTokenResponderFlow(private val counterPartySession: FlowSession): FlowLogic<Unit>() {
 
         @Suspendable
         override fun call() {
