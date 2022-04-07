@@ -2,6 +2,7 @@ package br.com.tokenizedbikes.flows
 
 import br.com.tokenizedbikes.flows.models.BaseBikeFlowResponse
 import br.com.tokenizedbikes.models.BikeUpdateModelDTO
+import br.com.tokenizedbikes.service.VaultCommonQueryService
 import br.com.tokenizedbikes.states.BikeTokenState
 import br.com.tokenizedbikes.utils.QueryUtils
 import co.paralleluniverse.fibers.Suspendable
@@ -23,9 +24,9 @@ object UpdateBikeTokenFlow {
 
         @Suspendable
         override fun call(): BaseBikeFlowResponse {
+            val vaultCommonQueryService = serviceHub.cordaService(VaultCommonQueryService::class.java)
 
-            val bikeTokenStatesRef = QueryUtils.getLinearStateById<BikeTokenState>(
-                services = serviceHub,
+            val bikeTokenStatesRef = vaultCommonQueryService.getLinearStateById<BikeTokenState>(
                 linearId = linearId.toString())
 
             val bikeTokenStateRef = bikeTokenStatesRef.states.single()

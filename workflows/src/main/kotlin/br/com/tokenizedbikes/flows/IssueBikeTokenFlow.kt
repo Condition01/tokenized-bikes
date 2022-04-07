@@ -1,11 +1,16 @@
 package br.com.tokenizedbikes.flows
 
 import br.com.tokenizedbikes.flows.models.BikeIssueFlowResponse
+import br.com.tokenizedbikes.service.VaultBikeTokenQueryService
+import br.com.tokenizedbikes.service.VaultCommonQueryService
 import br.com.tokenizedbikes.states.BikeTokenState
 import co.paralleluniverse.fibers.Suspendable
+import com.r3.corda.lib.tokens.contracts.types.TokenPointer
+import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
 import com.r3.corda.lib.tokens.workflows.utilities.heldBy
+import net.corda.core.flows.FlowException
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.StartableByRPC
 import net.corda.core.identity.Party
@@ -37,10 +42,15 @@ class IssueBikeTokenFlow(
 
         progressTracker.currentStep = INITIATING_TRANSACTION
 
-        val bikeStateAndRef = serviceHub.vaultService.queryBy<BikeTokenState>().states
-            .filter { it.state.data.serialNumber == serialNumber }[0]
+        val vaultBikeTokenQueryService = serviceHub.cordaService(VaultBikeTokenQueryService::class.java)
 
-        val bikeTokenType = bikeStateAndRef.state.data
+        val vaultPage = vaultBikeTokenQueryService.getBikeTokenBySerialNumber(
+            serialNumber = serialNumber)
+
+        if(vaultPage.states.isEmpty() )
+            throw FlowException("No states with 'serialNumber' - $serialNumber found")
+
+        val bikeTokenType = vaultPage.states.single().state.data
 
         progressTracker.currentStep = GENERATING_NONFUNGIBLE_TOKEN
 

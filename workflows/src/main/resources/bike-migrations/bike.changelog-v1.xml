@@ -1,0 +1,29 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+    <changeSet author="R3.Corda" id="create_iou_state">
+        <createTable tableName="tbl_bike_token_state">
+            <column name="output_index" type="INT"/>
+            <column name="transaction_id" type="NVARCHAR(64)"/>
+            <column name="linearId" type="NVARCHAR(64)"/>
+            <column name="bt_brand" type="NVARCHAR(64)"/>
+            <column name="bt_model_name" type="NVARCHAR(64)"/>
+            <column name="bt_bike_image_url" type="NVARCHAR(200)"/>
+            <column name="bt_serial_number" type="NVARCHAR(200)"/>
+            <column name="bt_year" type="INT"/>
+            <column name="bt_percent_of_conservation" type="FLOAT(2)"/>
+            <column name="bt_dollar_price" type="FLOAT(2))"/>
+            <column name="bt_is_new" type="NVARCHAR(64)"/>
+            <column name="bt_mantainer_name" type="BOOLEAN"/>
+            <column name="bc_id_fk" type="NVARCHAR(64)"/>
+        </createTable>
+        <createTable tableName="tbl_bike_color">
+            <column name="bc_id" type="BIGINT"/>
+            <column name="bc_main_color" type="FLOAT(2)"/>
+            <column name="bc_is_custom" type="FLOAT(2))"/>
+            <column name="bc_color_description" type="NVARCHAR(64)"/>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>

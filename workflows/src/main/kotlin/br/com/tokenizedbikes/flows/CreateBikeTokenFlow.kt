@@ -2,6 +2,7 @@ package br.com.tokenizedbikes.flows
 
 import br.com.tokenizedbikes.flows.models.BaseBikeFlowResponse
 import br.com.tokenizedbikes.models.BikeModelDTO
+import br.com.tokenizedbikes.service.VaultBikeTokenQueryService
 import br.com.tokenizedbikes.states.BikeTokenState
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.utilities.withNotary
@@ -44,10 +45,12 @@ class CreateBikeTokenFlow(
             maintainer = ourIdentity
         )
 
-        val bikeStateAndRef = serviceHub.vaultService.queryBy<BikeTokenState>().states
-            .filter { it.state.data.serialNumber == bikeState.serialNumber }
+        val vaultBikeTokenQueryService = serviceHub.cordaService(VaultBikeTokenQueryService::class.java)
 
-        if(bikeStateAndRef.isNotEmpty())
+        val vaultPage = vaultBikeTokenQueryService.getBikeTokenBySerialNumber(
+            serialNumber = bikeState.serialNumber)
+
+        if(vaultPage.states.isNotEmpty())
             throw FlowException("A BikeState with same 'serialNumber' - ${bikeState.serialNumber} already exists")
 
         val transactionState = bikeState withNotary notary
