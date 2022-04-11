@@ -14,6 +14,7 @@ open class FlowTests {
     lateinit var nodeA: StartedMockNode
     lateinit var nodeB: StartedMockNode
     lateinit var nodeC: StartedMockNode
+    lateinit var nodeD: StartedMockNode
 
     @Before
     fun setup() {
@@ -35,6 +36,7 @@ open class FlowTests {
         nodeA = network.createPartyNode(null)
         nodeB = network.createPartyNode(null)
         nodeC = network.createPartyNode(null)
+        nodeD = network.createPartyNode(null)
         network.runNetwork()
     }
 

@@ -1,4 +1,4 @@
-package br.com.tokenizedbikes.flows.models
+package br.com.tokenizedbikes.flows.biketoken.models
 
 import net.corda.core.serialization.CordaSerializable
 

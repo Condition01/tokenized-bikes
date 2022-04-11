@@ -7,7 +7,7 @@ import net.corda.core.contracts.Contract
 import net.corda.core.contracts.requireThat
 import net.corda.core.transactions.LedgerTransaction
 
-class BikeContract : EvolvableTokenContract() {
+class BikeContract : EvolvableTokenContract(), Contract {
     companion object {
         const val ID = "br.com.tokenizedbikes.contracts.BikeContract"
     }

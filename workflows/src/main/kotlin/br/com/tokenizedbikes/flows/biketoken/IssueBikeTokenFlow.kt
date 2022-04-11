@@ -1,6 +1,6 @@
-package br.com.tokenizedbikes.flows
+package br.com.tokenizedbikes.flows.biketoken
 
-import br.com.tokenizedbikes.flows.models.BikeIssueFlowResponse
+import br.com.tokenizedbikes.flows.biketoken.models.BikeIssueFlowResponse
 import br.com.tokenizedbikes.service.VaultBikeTokenQueryService
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
@@ -15,7 +15,8 @@ import net.corda.core.utilities.ProgressTracker
 @StartableByRPC
 class IssueBikeTokenFlow(
     private val serialNumber: String,
-    private val holder: Party
+    private val holder: Party,
+    private var observers: List<Party> = emptyList()
 ) : FlowLogic<BikeIssueFlowResponse>() {
 
     companion object {
@@ -58,7 +59,7 @@ class IssueBikeTokenFlow(
 
         progressTracker.currentStep = CALLING_ISSUE_FLOW
 
-        val stx = subFlow(IssueTokens(listOf(bikeToken)))
+        val stx = subFlow(IssueTokens(listOf(bikeToken), observers))
 
         return BikeIssueFlowResponse(
             txId = stx.id.toHexString(),

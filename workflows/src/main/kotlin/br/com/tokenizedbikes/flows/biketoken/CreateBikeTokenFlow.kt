@@ -1,6 +1,6 @@
-package br.com.tokenizedbikes.flows
+package br.com.tokenizedbikes.flows.biketoken
 
-import br.com.tokenizedbikes.flows.models.BaseBikeFlowResponse
+import br.com.tokenizedbikes.flows.biketoken.models.BaseBikeFlowResponse
 import br.com.tokenizedbikes.models.BikeModelDTO
 import br.com.tokenizedbikes.service.VaultBikeTokenQueryService
 import br.com.tokenizedbikes.states.BikeTokenState
@@ -10,11 +10,13 @@ import com.r3.corda.lib.tokens.workflows.flows.rpc.CreateEvolvableTokens
 import net.corda.core.flows.FlowException
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.StartableByRPC
+import net.corda.core.identity.Party
 import net.corda.core.utilities.ProgressTracker
 
 @StartableByRPC
 class CreateBikeTokenFlow(
-    private val bikeModelDTO: BikeModelDTO
+    private val bikeModelDTO: BikeModelDTO,
+    private var observers: List<Party> = emptyList()
 ) : FlowLogic<BaseBikeFlowResponse>() {
 
     companion object {
@@ -56,7 +58,7 @@ class CreateBikeTokenFlow(
 
         progressTracker.currentStep = CALLING_EVOLVABLE_TRANSACTION
 
-        val stx = subFlow(CreateEvolvableTokens(transactionState))
+        val stx = subFlow(CreateEvolvableTokens(transactionState, observers))
 
         return BaseBikeFlowResponse(
             txId =  stx.id.toHexString(),

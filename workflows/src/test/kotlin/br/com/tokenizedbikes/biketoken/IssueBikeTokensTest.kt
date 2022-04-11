@@ -1,8 +1,8 @@
-package br.com.tokenizedbikes
+package br.com.tokenizedbikes.biketoken
 
-import br.com.tokenizedbikes.flows.CreateBikeTokenFlow
-import br.com.tokenizedbikes.flows.IssueBikeTokenFlow
-import br.com.tokenizedbikes.flows.MoveBikeTokenFlow
+import br.com.tokenizedbikes.FlowTests
+import br.com.tokenizedbikes.flows.biketoken.CreateBikeTokenFlow
+import br.com.tokenizedbikes.flows.biketoken.IssueBikeTokenFlow
 import br.com.tokenizedbikes.models.BikeColor
 import br.com.tokenizedbikes.models.BikeColorEnum
 import br.com.tokenizedbikes.models.BikeModelDTO
@@ -11,13 +11,14 @@ import net.corda.core.node.services.queryBy
 import net.corda.core.utilities.getOrThrow
 import org.junit.Test
 import org.junit.jupiter.api.assertThrows
+import java.lang.Exception
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-class MoveBikeTokensTest: FlowTests() {
+class IssueBikeTokensTest: FlowTests() {
 
     @Test
-    fun `Token Move - Vanilla Test`() {
+    fun `Token Issue - Vanilla Test`() {
         val bikeColor = BikeColor(
             mainColor = BikeColorEnum.GREEN,
             colorDescription = "None",
@@ -55,27 +56,10 @@ class MoveBikeTokensTest: FlowTests() {
         assertNotNull(bikeStateAndRef2)
         assertNotNull(bikeStateAndRef2.state.data)
         assertEquals(bikeStateAndRef2.state.data.serialNumber, bikeDTO.serialNumber)
-
-        val moveTokenTokenFlow = MoveBikeTokenFlow.MoveBikeTokenInitiatingFlow("21312AAAs", nodeC.info.legalIdentities.first())
-        val result3 = nodeB.runFlow(moveTokenTokenFlow).getOrThrow()
-
-        val bikeStateAndRef4 = nodeB.services.vaultService.queryBy<BikeTokenState>().states
-            .filter { it.state.data.serialNumber == result3.bikeSerialNumber }[0]
-
-        val bikeStateAndRef5 = nodeC.services.vaultService.queryBy<BikeTokenState>().states
-            .filter { it.state.data.serialNumber == result3.bikeSerialNumber }[0]
-
-        assertEquals(bikeStateAndRef4, bikeStateAndRef5)
-
-        val moveTokenTokenFlow2 = MoveBikeTokenFlow.MoveBikeTokenInitiatingFlow("21312AAAs", nodeB.info.legalIdentities.first())
-
-        assertThrows<Exception> {
-            nodeB.runFlow(moveTokenTokenFlow2).getOrThrow()
-        }
     }
 
     @Test
-    fun `Token Move - PING-PONG Test`() {
+    fun `Token Issue - Issuing with different peer - Error Test`() {
         val bikeColor = BikeColor(
             mainColor = BikeColorEnum.GREEN,
             colorDescription = "None",
@@ -105,32 +89,10 @@ class MoveBikeTokensTest: FlowTests() {
         assertEquals(bikeStateAndRef.state.data.serialNumber, bikeDTO.serialNumber)
 
         val issueBikeFlow = IssueBikeTokenFlow("21312AAAs", nodeB.info.legalIdentities.first())
-        val result2 = nodeA.runFlow(issueBikeFlow).getOrThrow()
 
-        val bikeStateAndRef2 = nodeB.services.vaultService.queryBy<BikeTokenState>().states
-            .filter { it.state.data.serialNumber == result2.bikeSerialNumber }[0]
-
-        assertNotNull(bikeStateAndRef2)
-        assertNotNull(bikeStateAndRef2.state.data)
-        assertEquals(bikeStateAndRef2.state.data.serialNumber, bikeDTO.serialNumber)
-
-        val moveTokenTokenFlow = MoveBikeTokenFlow.MoveBikeTokenInitiatingFlow("21312AAAs", nodeC.info.legalIdentities.first())
-        val result3 = nodeB.runFlow(moveTokenTokenFlow).getOrThrow()
-
-        val bikeStateAndRef4 = nodeB.services.vaultService.queryBy<BikeTokenState>().states
-            .filter { it.state.data.serialNumber == result3.bikeSerialNumber }[0]
-
-        val bikeStateAndRef5 = nodeC.services.vaultService.queryBy<BikeTokenState>().states
-            .filter { it.state.data.serialNumber == result3.bikeSerialNumber }[0]
-
-        assertEquals(bikeStateAndRef4, bikeStateAndRef5)
-
-        val moveTokenTokenFlow2 = MoveBikeTokenFlow.MoveBikeTokenInitiatingFlow("21312AAAs", nodeB.info.legalIdentities.first())
-
-        nodeC.runFlow(moveTokenTokenFlow2).getOrThrow()
-
-        val moveTokenTokenFlow3 = MoveBikeTokenFlow.MoveBikeTokenInitiatingFlow("21312AAAs", nodeC.info.legalIdentities.first())
-        nodeB.runFlow(moveTokenTokenFlow3).getOrThrow()
+        assertThrows<Exception> {
+            nodeB.runFlow(issueBikeFlow).getOrThrow()
+        }
     }
 
 }
