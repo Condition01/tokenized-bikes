@@ -1,20 +1,13 @@
 package br.com.tokenizedbikes.flows
 
-import br.com.tokenizedbikes.flows.models.BaseBikeFlowResponse
 import br.com.tokenizedbikes.flows.models.BikeMoveFlowResponse
 import br.com.tokenizedbikes.service.VaultBikeTokenQueryService
-import br.com.tokenizedbikes.states.BikeTokenState
 import co.paralleluniverse.fibers.Suspendable
-import com.r3.corda.lib.tokens.contracts.types.TokenType
-import com.r3.corda.lib.tokens.contracts.utilities.amount
-import com.r3.corda.lib.tokens.workflows.flows.rpc.MoveFungibleTokens
-import com.r3.corda.lib.tokens.workflows.flows.rpc.MoveFungibleTokensHandler
 import com.r3.corda.lib.tokens.workflows.flows.rpc.MoveNonFungibleTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.MoveNonFungibleTokensHandler
 import com.r3.corda.lib.tokens.workflows.types.PartyAndToken
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
-
 
 object MoveBikeTokenFlow {
 
