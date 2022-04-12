@@ -11,5 +11,6 @@ class BikeUpdateModelDTO(
     val year: Int,
     val percentOfConservation: Double,
     val dollarPrice: Double,
+    val coinPrice: Double,
     val isNew: Boolean
 )

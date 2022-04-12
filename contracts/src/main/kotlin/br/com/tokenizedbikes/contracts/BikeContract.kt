@@ -2,9 +2,10 @@ package br.com.tokenizedbikes.contracts
 
 import br.com.tokenizedbikes.states.BikeTokenState
 import com.r3.corda.lib.tokens.contracts.EvolvableTokenContract
-import net.corda.core.contracts.CommandData
-import net.corda.core.contracts.Contract
-import net.corda.core.contracts.requireThat
+import com.r3.corda.lib.tokens.contracts.commands.Create
+import com.r3.corda.lib.tokens.contracts.commands.EvolvableTokenTypeCommand
+import com.r3.corda.lib.tokens.contracts.commands.Update
+import net.corda.core.contracts.*
 import net.corda.core.transactions.LedgerTransaction
 
 class BikeContract : EvolvableTokenContract(), Contract {
@@ -21,4 +22,6 @@ class BikeContract : EvolvableTokenContract(), Contract {
 
     override fun additionalUpdateChecks(tx: LedgerTransaction) {
     }
+
+    class Purchase : EvolvableTokenTypeCommand, TypeOnlyCommandData()
 }

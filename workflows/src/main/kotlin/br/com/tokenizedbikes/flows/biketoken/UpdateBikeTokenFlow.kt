@@ -34,6 +34,7 @@ object UpdateBikeTokenFlow {
 
             val outputState = bikeStateToken.copy(
                 dollarPrice = bikeUpdateModelDTO.dollarPrice,
+                coinPrice = bikeUpdateModelDTO.coinPrice,
                 isNew = bikeUpdateModelDTO.isNew,
                 bikeImageURL = bikeUpdateModelDTO.bikeImageURL,
                 color = bikeUpdateModelDTO.color,
@@ -52,9 +53,9 @@ object UpdateBikeTokenFlow {
                 }
             }
 
-            val stx = subFlow(UpdateEvolvableTokenFlow(bikeTokenStateRef, outputState, listOf(), observerSessions))
+            val stx = subFlow(UpdateEvolvableTokenFlow(bikeTokenStateRef, outputState, emptyList(), observerSessions))
 
-            subFlow(UpdateDistributionListFlow(stx));
+            subFlow(UpdateDistributionListFlow(stx))
 
             return BaseBikeFlowResponse(
                 txId =  stx.id.toHexString(),

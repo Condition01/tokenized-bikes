@@ -38,6 +38,8 @@ object PersistentBikeTokenSchemaV1 : MappedSchema(
         var percentOfConservation: Double? = null,
         @Column(name = "bt_dollar_price")
         var dollarPrice: Double? = null,
+        @Column(name = "bt_coin_price")
+        var coinPrice: Double? = null,
         @Column(name = "bt_is_new")
         var isNew: Boolean? = null,
         @Column(name = "bt_mantainer_name")

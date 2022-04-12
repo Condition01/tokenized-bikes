@@ -36,6 +36,7 @@ class MoveBikeTokensTest: FlowTests() {
             bikeImageURL = "https://bikeshopbarigui.com.br/upload/estoque/produto/principal-6206-604e687b067f4-cannondale-habit-1.jpg",
             serialNumber = "21312AAAs",
             dollarPrice = 200.00,
+            coinPrice = 100.00,
             isNew = true
         )
 
@@ -94,6 +95,7 @@ class MoveBikeTokensTest: FlowTests() {
             bikeImageURL = "https://bikeshopbarigui.com.br/upload/estoque/produto/principal-6206-604e687b067f4-cannondale-habit-1.jpg",
             serialNumber = "21312AAAs",
             dollarPrice = 200.00,
+            coinPrice = 100.00,
             isNew = true
         )
 
@@ -153,6 +155,7 @@ class MoveBikeTokensTest: FlowTests() {
             bikeImageURL = "https://static.netshoes.com.br/produtos/bicicleta-caloi-elite-carbon-sport-2021/16/D28-0523-016/D28-0523-016_zoom1.jpg?ts=1645114872&ims=544x",
             serialNumber = "3LThOxSef1",
             dollarPrice = 100.00,
+            coinPrice = 100.00,
             isNew = true
         )
 

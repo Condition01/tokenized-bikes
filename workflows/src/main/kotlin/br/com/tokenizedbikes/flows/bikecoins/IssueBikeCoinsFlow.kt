@@ -1,22 +1,22 @@
 package br.com.tokenizedbikes.flows.bikecoins
 
 import br.com.tokenizedbikes.flows.bikecoins.models.BikeCoinIssueFlowResponse
-import br.com.tokenizedbikes.flows.biketoken.IssueBikeTokenFlow
-import br.com.tokenizedbikes.flows.biketoken.models.BaseBikeFlowResponse
+import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.heldBy
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.contracts.utilities.of
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
 import net.corda.core.flows.FlowLogic
+import net.corda.core.flows.StartableByRPC
 import net.corda.core.identity.Party
 import net.corda.core.utilities.ProgressTracker
 
+@StartableByRPC
 class IssueBikeCoinsFlow(
     private val amount: Double,
-    private val identifier: String,
+    private val tokenIdentifier: String,
     private val fractionDigits: Int,
-    private val issuer: Party,
     private val holder: Party,
     private var observers: List<Party> = emptyList()
 ) : FlowLogic<BikeCoinIssueFlowResponse>() {
@@ -31,23 +31,26 @@ class IssueBikeCoinsFlow(
         )
     }
 
-    override val progressTracker = IssueBikeTokenFlow.tracker()
+    override val progressTracker = tracker()
 
+    @Suspendable
     override fun call(): BikeCoinIssueFlowResponse {
-        progressTracker.currentStep = IssueBikeTokenFlow.Companion.INITIATING_TRANSACTION
+        progressTracker.currentStep = INITIATING_TRANSACTION
 
-        val tokenIdentifier = TokenType(identifier, fractionDigits)
+        val tokenIdentifier = TokenType(tokenIdentifier, fractionDigits)
 
-        val fungibleToken = amount of tokenIdentifier issuedBy issuer heldBy holder
+        val fungibleToken = amount of tokenIdentifier issuedBy ourIdentity heldBy holder
 
-        progressTracker.currentStep = IssueBikeTokenFlow.Companion.CALLING_ISSUE_FLOW
+        progressTracker.currentStep = CALLING_ISSUE_FLOW
 
         val stx = subFlow(IssueTokens(listOf(fungibleToken), observers))
 
         return BikeCoinIssueFlowResponse(
             txId = stx.id.toHexString(),
             amount = amount,
-            tokenType = tokenIdentifier
+            tokenType = tokenIdentifier,
+            issuer = ourIdentity,
+            holder = holder
         )
     }
 }

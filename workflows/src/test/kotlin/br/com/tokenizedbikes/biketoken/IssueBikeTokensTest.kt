@@ -7,11 +7,11 @@ import br.com.tokenizedbikes.models.BikeColor
 import br.com.tokenizedbikes.models.BikeColorEnum
 import br.com.tokenizedbikes.models.BikeModelDTO
 import br.com.tokenizedbikes.states.BikeTokenState
+import com.sun.org.apache.bcel.internal.ExceptionConst
 import net.corda.core.node.services.queryBy
 import net.corda.core.utilities.getOrThrow
 import org.junit.Test
 import org.junit.jupiter.api.assertThrows
-import java.lang.Exception
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
@@ -34,6 +34,7 @@ class IssueBikeTokensTest: FlowTests() {
             bikeImageURL = "https://bikeshopbarigui.com.br/upload/estoque/produto/principal-6206-604e687b067f4-cannondale-habit-1.jpg",
             serialNumber = "21312AAAs",
             dollarPrice = 200.00,
+            coinPrice = 100.00,
             isNew = true
         )
 
@@ -56,6 +57,14 @@ class IssueBikeTokensTest: FlowTests() {
         assertNotNull(bikeStateAndRef2)
         assertNotNull(bikeStateAndRef2.state.data)
         assertEquals(bikeStateAndRef2.state.data.serialNumber, bikeDTO.serialNumber)
+
+        val bikeStateAndRef3 = nodeA.services.vaultService.queryBy<BikeTokenState>().states
+            .filter { it.state.data.serialNumber == bikeDTO.serialNumber }[0]
+
+        assertNotNull(bikeStateAndRef3)
+        assertNotNull(bikeStateAndRef3.state.data)
+        assertEquals(bikeStateAndRef3.state.data.serialNumber, bikeDTO.serialNumber)
+        assert(bikeStateAndRef3.state.data.issued)
     }
 
     @Test
@@ -75,6 +84,7 @@ class IssueBikeTokensTest: FlowTests() {
             bikeImageURL = "https://bikeshopbarigui.com.br/upload/estoque/produto/principal-6206-604e687b067f4-cannondale-habit-1.jpg",
             serialNumber = "21312AAAs",
             dollarPrice = 200.00,
+            coinPrice = 100.00,
             isNew = true
         )
 

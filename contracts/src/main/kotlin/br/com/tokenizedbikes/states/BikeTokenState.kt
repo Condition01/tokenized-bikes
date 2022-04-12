@@ -23,8 +23,11 @@ data class BikeTokenState(
     val year: Int,
     val percentOfConservation: Double,
     val dollarPrice: Double,
+    val coinPrice: Double,
     val isNew: Boolean,
     val maintainer: Party,
+    val issued: Boolean = false,
+    val issuingParty: Party? = null,
     override val linearId: UniqueIdentifier = UniqueIdentifier()
 ) : EvolvableTokenType(), QueryableState {
 
@@ -39,6 +42,7 @@ data class BikeTokenState(
                 serialNumber = bikeModelDTO.serialNumber,
                 percentOfConservation = bikeModelDTO.percentOfConservation,
                 dollarPrice = bikeModelDTO.dollarPrice,
+                coinPrice = bikeModelDTO.coinPrice,
                 isNew = bikeModelDTO.isNew,
                 maintainer = maintainer
             );
@@ -63,6 +67,7 @@ data class BikeTokenState(
                     bikeImageURL = this.bikeImageURL,
                     isNew = this.isNew,
                     dollarPrice = this.dollarPrice,
+                    coinPrice = this.coinPrice,
                     serialNumber = this.serialNumber,
                     maintainer = this.maintainer
                 ).apply {
