@@ -12,6 +12,7 @@ import br.com.tokenizedbikes.models.BikeUpdateModelDTO
 import br.com.tokenizedbikes.states.BikeTokenState
 import net.corda.core.node.services.queryBy
 import net.corda.core.utilities.getOrThrow
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.jupiter.api.assertThrows
 import java.lang.Exception
@@ -205,6 +206,7 @@ class UpdateBikeTokensTest: FlowTests() {
         val bikeStateAndRef5 = nodeD.services.vaultService.queryBy<BikeTokenState>().states
             .filter { it.state.data.serialNumber == result.bikeSerialNumber }[0]
 
+        assertEquals(bikeStateAndRef3, bikeStateAndRef4)
         assertEquals(bikeStateAndRef3, bikeStateAndRef5)
 
         val bikeUpdateDTO2 = BikeUpdateModelDTO(
@@ -233,6 +235,7 @@ class UpdateBikeTokensTest: FlowTests() {
         val bikeStateAndRef8 = nodeD.services.vaultService.queryBy<BikeTokenState>().states
             .filter { it.state.data.serialNumber == result.bikeSerialNumber }[0]
 
+        assertEquals(bikeStateAndRef6, bikeStateAndRef7)
         assertEquals(bikeStateAndRef6, bikeStateAndRef8)
     }
 
