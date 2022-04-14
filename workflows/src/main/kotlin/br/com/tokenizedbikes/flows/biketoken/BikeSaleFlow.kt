@@ -1,6 +1,6 @@
 package br.com.tokenizedbikes.flows.biketoken
 
-import br.com.tokenizedbikes.flows.biketoken.models.BikePurchaseFlowResponse
+import br.com.tokenizedbikes.flows.biketoken.models.BikeCommercializationFlowResponse
 import br.com.tokenizedbikes.service.VaultBikeTokenQueryService
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.tokens.contracts.states.FungibleToken
@@ -10,7 +10,6 @@ import com.r3.corda.lib.tokens.selection.database.selector.DatabaseTokenSelectio
 import com.r3.corda.lib.tokens.workflows.flows.move.addMoveNonFungibleTokens
 import com.r3.corda.lib.tokens.workflows.flows.move.addMoveTokens
 import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.UpdateDistributionListFlow
-import com.r3.corda.lib.tokens.workflows.types.PartyAndAmount
 import net.corda.core.contracts.Amount
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.*
@@ -28,10 +27,10 @@ object BikeSaleFlow {
         val paymentTokenIdentifier: String,
         val fractionDigits: Int,
         val buyer: Party
-    ) : FlowLogic<BikePurchaseFlowResponse>() {
+    ) : FlowLogic<BikeCommercializationFlowResponse>() {
 
         @Suspendable
-        override fun call(): BikePurchaseFlowResponse {
+        override fun call(): BikeCommercializationFlowResponse {
 
             val notary = serviceHub.networkMapCache.notaryIdentities[0]
 
@@ -74,7 +73,7 @@ object BikeSaleFlow {
 
             subFlow(UpdateDistributionListFlow(stx))
 
-            return BikePurchaseFlowResponse(
+            return BikeCommercializationFlowResponse(
                 txId = stx.id.toHexString(),
                 bikeSerialNumber = bikeSerialNumber,
                 buyer = buyer,

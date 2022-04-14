@@ -2,8 +2,10 @@ package br.com.tokenizedbikes.flows.biketoken.models
 
 import net.corda.core.contracts.Amount
 import net.corda.core.identity.Party
+import net.corda.core.serialization.CordaSerializable
 
-class BikePurchaseFlowResponse(
+@CordaSerializable
+class BikeCommercializationFlowResponse(
     txId: String,
     bikeSerialNumber: String,
     val priceInCoins: Double,

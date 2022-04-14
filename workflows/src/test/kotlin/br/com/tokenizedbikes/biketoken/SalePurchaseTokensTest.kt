@@ -2,22 +2,22 @@ package br.com.tokenizedbikes.biketoken
 
 import br.com.tokenizedbikes.FlowTests
 import br.com.tokenizedbikes.flows.bikecoins.IssueBikeCoinsFlow
-import br.com.tokenizedbikes.flows.biketoken.BikeSaleFlow
-import br.com.tokenizedbikes.flows.biketoken.CreateBikeTokenFlow
-import br.com.tokenizedbikes.flows.biketoken.IssueBikeTokenFlow
+import br.com.tokenizedbikes.flows.biketoken.*
 import br.com.tokenizedbikes.models.BikeColor
 import br.com.tokenizedbikes.models.BikeColorEnum
 import br.com.tokenizedbikes.models.BikeModelDTO
 import br.com.tokenizedbikes.service.VaultCommonQueryService
 import br.com.tokenizedbikes.states.BikeTokenState
+import net.corda.core.identity.Party
 import net.corda.core.node.services.queryBy
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.StartedMockNode
 import org.junit.Test
 import org.junit.jupiter.api.assertThrows
 import java.lang.Exception
+import kotlin.test.assertNotNull
 
-class SaleBikeTokensTest: FlowTests() {
+class SalePurchaseTokensTest: FlowTests() {
 
     private fun issueBikeTokenForNode(node: StartedMockNode): String {
         val bikeColor = BikeColor(
@@ -71,61 +71,55 @@ class SaleBikeTokensTest: FlowTests() {
     }
 
     @Test
-    fun `Token Sale - Vanilla Test`() { val serialNumber = issueBikeTokenForNode(nodeB)
+    fun `Token Purchase - Vanilla Test`() {
+        val serialNumber = issueBikeTokenForNode(nodeB)
         issueCoinsForNode(nodeC)
 
-        val bikeStateAndRef = nodeC.services.vaultService.queryBy<BikeTokenState>().states
+        val bikeStateAndRefAfterUpdate = nodeC.services.vaultService.queryBy<BikeTokenState>().states
             .filter { it.state.data.serialNumber == serialNumber }
 
-        assert(bikeStateAndRef.isEmpty())
+        assert(bikeStateAndRefAfterUpdate.isEmpty())
 
-        val saleBikeTokenFlow = BikeSaleFlow.BikeSaleInitiatingFlow(
+        val bikePurchaseFlow = BikePurchaseFlow.BikePurchaseInitiatingFlow(
             bikeSerialNumber = serialNumber,
-            buyer = nodeC.info.legalIdentities[0],
+            tokenIdentifierString = "BCT",
             fractionDigits = 2,
-            paymentTokenIdentifier = "BCT"
+            seller = nodeB.info.legalIdentities[0]
         )
 
-        val result = nodeB.runFlow(saleBikeTokenFlow).getOrThrow()
+        val sale = nodeC.runFlow(bikePurchaseFlow).getOrThrow()
 
-        val bikeStateAndRefAfterUpdate = nodeC.services.vaultService.queryBy<BikeTokenState>().states
-            .filter { it.state.data.serialNumber == result.bikeSerialNumber }
+        val bikeStateAndRefAfterUpdate2 = nodeC.services.vaultService.queryBy<BikeTokenState>().states
+            .filter { it.state.data.serialNumber == sale.bikeSerialNumber }
 
-        assert(bikeStateAndRefAfterUpdate.isNotEmpty())
-
-        val vaultCommonQueryService = nodeB.services.cordaService(VaultCommonQueryService::class.java)
-
-        val nodeBFungibles = vaultCommonQueryService.getFungibleTokensByIdentifier("BCT")
-
-        assert(nodeBFungibles.states.isNotEmpty())
-
-        val vaultCommonQueryServiceNodeC = nodeC.services.cordaService(VaultCommonQueryService::class.java)
-
-        val nodeCFungibles = vaultCommonQueryServiceNodeC.getFungibleTokensByIdentifier("BCT")
-
-        assert(nodeCFungibles.states.isNotEmpty())
+        assert(bikeStateAndRefAfterUpdate2.isNotEmpty())
     }
 
     @Test
-    fun `Token Sale - No funds Test`() {
+    fun `Token Purchase - No funds Test`() {
         val serialNumber = issueBikeTokenForNode(nodeB)
         issueOneCoinForNode(nodeC)
 
-        val bikeStateAndRef = nodeC.services.vaultService.queryBy<BikeTokenState>().states
+        val bikeStateAndRefAfterUpdate = nodeC.services.vaultService.queryBy<BikeTokenState>().states
             .filter { it.state.data.serialNumber == serialNumber }
 
-        assert(bikeStateAndRef.isEmpty())
+        assert(bikeStateAndRefAfterUpdate.isEmpty())
 
-        val saleBikeTokenFlow = BikeSaleFlow.BikeSaleInitiatingFlow(
+        val bikePurchaseFlow = BikePurchaseFlow.BikePurchaseInitiatingFlow(
             bikeSerialNumber = serialNumber,
-            buyer = nodeC.info.legalIdentities[0],
+            tokenIdentifierString = "BCT",
             fractionDigits = 2,
-            paymentTokenIdentifier = "BCT"
+            seller = nodeB.info.legalIdentities[0]
         )
 
         assertThrows<Exception> {
-            nodeB.runFlow(saleBikeTokenFlow).getOrThrow()
+            nodeC.runFlow(bikePurchaseFlow).getOrThrow()
         }
+
+        val bikeStateAndRefAfterUpdate2 = nodeC.services.vaultService.queryBy<BikeTokenState>().states
+            .filter { it.state.data.serialNumber == serialNumber }
+
+        assert(bikeStateAndRefAfterUpdate2.isEmpty())
     }
 
 }
