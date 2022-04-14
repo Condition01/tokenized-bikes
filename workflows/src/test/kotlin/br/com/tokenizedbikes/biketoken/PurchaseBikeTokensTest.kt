@@ -17,7 +17,7 @@ import org.junit.jupiter.api.assertThrows
 import java.lang.Exception
 import kotlin.test.assertNotNull
 
-class SalePurchaseTokensTest: FlowTests() {
+class PurchaseBikeTokensTest: FlowTests() {
 
     private fun issueBikeTokenForNode(node: StartedMockNode): String {
         val bikeColor = BikeColor(

@@ -4,12 +4,16 @@ import br.com.tokenizedbikes.flows.biketoken.models.BikeCommercializationFlowRes
 import br.com.tokenizedbikes.service.VaultBikeTokenQueryService
 import br.com.tokenizedbikes.states.BikeTokenState
 import co.paralleluniverse.fibers.Suspendable
+import com.r3.corda.lib.tokens.contracts.states.FungibleToken
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.of
+import com.r3.corda.lib.tokens.selection.database.selector.DatabaseTokenSelection
 import com.r3.corda.lib.tokens.workflows.flows.move.addMoveFungibleTokens
+import com.r3.corda.lib.tokens.workflows.flows.move.addMoveTokens
 import com.r3.corda.lib.tokens.workflows.flows.rpc.MoveNonFungibleTokens
 import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.UpdateDistributionListFlow
 import com.r3.corda.lib.tokens.workflows.types.PartyAndToken
+import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
@@ -45,7 +49,21 @@ object BikePurchaseFlow {
 
             val txBuilder = TransactionBuilder(notary = notary)
 
+            /*** You can use this method - work same way as 'addMoveTokens' below
             addMoveFungibleTokens(txBuilder, serviceHub, amountOfBikeCoins, seller, ourIdentity)
+             */
+
+            val inputsAndOutputs: Pair<List<StateAndRef<FungibleToken>>, List<FungibleToken>> =
+                DatabaseTokenSelection(serviceHub).generateMove(
+                    listOf(
+                        Pair(
+                            sellerSession.counterparty,
+                            amountOfBikeCoins
+                        )
+                    ), ourIdentity
+                )
+
+            addMoveTokens(txBuilder, inputsAndOutputs.first, inputsAndOutputs.second)
 
             val initialSignedTrnx = serviceHub.signInitialTransaction(txBuilder)
 
@@ -76,7 +94,8 @@ object BikePurchaseFlow {
             val vaultBikeTokenQueryService = serviceHub.cordaService(VaultBikeTokenQueryService::class.java)
 
             val vaultPage = vaultBikeTokenQueryService.getBikeTokenBySerialNumber(
-                serialNumber = bikeSerialNumber)
+                serialNumber = bikeSerialNumber
+            )
 
             if (vaultPage.states.isEmpty())
                 throw FlowException("No states with 'serialNumber' - $bikeSerialNumber found")
