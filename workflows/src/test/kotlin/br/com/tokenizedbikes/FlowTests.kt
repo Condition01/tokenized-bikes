@@ -27,7 +27,10 @@ open class FlowTests {
                     TestCordapp.findCordapp("br.com.tokenizedbikes.flows"),
                     TestCordapp.findCordapp("br.com.tokenizedbikes.schemas"),
                     TestCordapp.findCordapp("com.r3.corda.lib.tokens.contracts"),
-                    TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows")
+                    TestCordapp.findCordapp("com.r3.corda.lib.tokens.workflows"),
+                    TestCordapp.findCordapp("com.r3.corda.lib.ci"),
+                    TestCordapp.findCordapp("com.r3.corda.lib.accounts.contracts"),
+                    TestCordapp.findCordapp("com.r3.corda.lib.accounts.workflows")
                 ),
                 notarySpecs = listOf(MockNetworkNotarySpec(CordaX500Name("Notary", "London", "GB"))),
                 networkParameters = myNetworkParameters

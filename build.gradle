@@ -4,9 +4,17 @@ buildscript { //properties that you need to build the project
     file("$projectDir/./constants.properties").withInputStream { constants.load(it) }
 
     ext {
+        //corda tokens
         tokens_release_version = '1.2'
         tokens_release_group = 'com.r3.corda.lib.tokens'
 
+        //corda accounts
+        accounts_release_version = '1.0'
+        accounts_release_group = 'com.r3.corda.lib.accounts'
+        confidential_id_release_group = "com.r3.corda.lib.ci"
+        confidential_id_release_version = "1.0"
+
+        //corda core
         corda_release_group = constants.getProperty("cordaReleaseGroup")
         corda_core_release_group =  constants.getProperty("cordaCoreReleaseGroup")
         corda_release_version = constants.getProperty("cordaVersion")
@@ -91,6 +99,8 @@ dependencies {
     cordapp project(":contracts")
     cordapp("$tokens_release_group:tokens-contracts:$tokens_release_version")
     cordapp("$tokens_release_group:tokens-workflows:$tokens_release_version")
+    cordapp("$confidential_id_release_group:ci-workflows:$confidential_id_release_version")
+    cordapp ("$accounts_release_group:accounts-workflows:$accounts_release_version")
 
     cordaCompile "org.apache.logging.log4j:log4j-slf4j-impl:${log4j_version}"
     cordaCompile "org.apache.logging.log4j:log4j-web:${log4j_version}"
