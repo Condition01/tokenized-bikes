@@ -2,6 +2,7 @@ package br.com.tokenizedbikes.service
 
 import br.com.tokenizedbikes.schemas.PersistentBikeTokenSchemaV1
 import br.com.tokenizedbikes.states.BikeTokenState
+import com.r3.corda.lib.accounts.contracts.states.AccountInfo
 import com.r3.corda.lib.tokens.contracts.internal.schemas.PersistentFungibleToken
 import com.r3.corda.lib.tokens.contracts.internal.schemas.PersistentNonFungibleToken
 import com.r3.corda.lib.tokens.contracts.states.EvolvableTokenType

@@ -6,14 +6,19 @@ import br.com.tokenizedbikes.flows.biketoken.IssueBikeTokenFlow
 import br.com.tokenizedbikes.models.BikeColor
 import br.com.tokenizedbikes.models.BikeColorEnum
 import br.com.tokenizedbikes.models.BikeModelDTO
+import br.com.tokenizedbikes.service.VaultCommonQueryService
 import br.com.tokenizedbikes.states.BikeTokenState
-import com.sun.org.apache.bcel.internal.ExceptionConst
+import com.r3.corda.lib.accounts.workflows.services.KeyManagementBackedAccountService
+import com.r3.corda.lib.tokens.contracts.states.NonFungibleToken
+import net.corda.core.contracts.StateAndRef
 import net.corda.core.node.services.queryBy
+import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.utilities.getOrThrow
 import org.junit.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+
 
 class IssueBikeTokensTest: FlowTests() {
 
@@ -48,23 +53,29 @@ class IssueBikeTokensTest: FlowTests() {
         assertNotNull(bikeStateAndRef.state.data)
         assertEquals(bikeStateAndRef.state.data.serialNumber, bikeDTO.serialNumber)
 
-        val issueBikeFlow = IssueBikeTokenFlow("21312AAAs", nodeB.info.legalIdentities.first())
+        val accountService = nodeB.services.cordaService(KeyManagementBackedAccountService::class.java)
+
+        val accountState = createAccount(network, accountService, "Alice")
+
+        val issueBikeFlow = IssueBikeTokenFlow("21312AAAs", accountState.state.data)
         val result2 = nodeA.runFlow(issueBikeFlow).getOrThrow()
 
         val bikeStateAndRef2 = nodeB.services.vaultService.queryBy<BikeTokenState>().states
             .filter { it.state.data.serialNumber == result2.bikeSerialNumber }[0]
 
         assertNotNull(bikeStateAndRef2)
-        assertNotNull(bikeStateAndRef2.state.data)
-        assertEquals(bikeStateAndRef2.state.data.serialNumber, bikeDTO.serialNumber)
 
-        val bikeStateAndRef3 = nodeA.services.vaultService.queryBy<BikeTokenState>().states
-            .filter { it.state.data.serialNumber == bikeDTO.serialNumber }[0]
+        val queryService = nodeB.services.cordaService(VaultCommonQueryService::class.java)
 
-        assertNotNull(bikeStateAndRef3)
-        assertNotNull(bikeStateAndRef3.state.data)
-        assertEquals(bikeStateAndRef3.state.data.serialNumber, bikeDTO.serialNumber)
-        assert(bikeStateAndRef3.state.data.issued)
+        val results = queryService.getNonFungiblesOfAccount(accountInfo = accountState.state.data,
+            tokenIdentifier = bikeStateAndRef2.state.data.linearId.toString())
+
+//        val participatingAccountCriteria: QueryCriteria = QueryCriteria.VaultQueryCriteria()
+//            .withExternalIds(listOf(accountState.state.data.identifier.id))
+//        val results: List<StateAndRef<NonFungibleToken>> = nodeB.services.vaultService
+//            .queryBy(NonFungibleToken::class.java, participatingAccountCriteria).states
+
+        assert(results.states.isNotEmpty())
     }
 
     @Test
@@ -98,7 +109,11 @@ class IssueBikeTokensTest: FlowTests() {
         assertNotNull(bikeStateAndRef.state.data)
         assertEquals(bikeStateAndRef.state.data.serialNumber, bikeDTO.serialNumber)
 
-        val issueBikeFlow = IssueBikeTokenFlow("21312AAAs", nodeB.info.legalIdentities.first())
+        val accountService = nodeB.services.cordaService(KeyManagementBackedAccountService::class.java)
+
+        val accountState = createAccount(network, accountService, "Alice")
+
+        val issueBikeFlow = IssueBikeTokenFlow("21312AAAs", accountState.state.data)
 
         assertThrows<Exception> {
             nodeB.runFlow(issueBikeFlow).getOrThrow()

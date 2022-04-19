@@ -1,8 +1,12 @@
 package br.com.tokenizedbikes
 
+import com.r3.corda.lib.accounts.contracts.states.AccountInfo
+import com.r3.corda.lib.accounts.workflows.services.KeyManagementBackedAccountService
 import net.corda.core.concurrent.CordaFuture
+import net.corda.core.contracts.StateAndRef
 import net.corda.core.flows.FlowLogic
 import net.corda.core.identity.CordaX500Name
+import net.corda.core.utilities.getOrThrow
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.node.*
 import org.junit.After
@@ -46,6 +50,14 @@ open class FlowTests {
     @After
     fun tearDown() {
         network.stopNodes()
+    }
+
+    fun createAccount(mockNet: MockNetwork, accountService: KeyManagementBackedAccountService, name: String): StateAndRef<AccountInfo> {
+        val accountFuture = accountService.createAccount(name)
+
+        mockNet.runNetwork()
+
+        return accountFuture.getOrThrow()
     }
 
     fun <T> StartedMockNode.runFlow(logic: FlowLogic<T>): CordaFuture<T> {
