@@ -51,27 +51,9 @@ open class VaultCommonQueryService(val service: AppServiceHub) : SingletonSerial
         return service.vaultService.queryBy(queryCriteria)
     }
 
-    fun getFungibleTokensByIdentifier(tokenIdentifier: String): Vault.Page<FungibleToken> {
-        val identifierCriteria = builder {
-            PersistentFungibleToken::tokenIdentifier.equal(tokenIdentifier)
-        }
-        val tokenIdentifierCriteria = QueryCriteria.VaultCustomQueryCriteria(identifierCriteria)
-
-        return service.vaultService.queryBy(tokenIdentifierCriteria)
-    }
-
-    fun getNonFungibleTokensByIdentifier(tokenIdentifier: String): Vault.Page<NonFungibleToken> {
-        val identifierCriteria = builder {
-            PersistentNonFungibleToken::tokenIdentifier.equal(tokenIdentifier)
-        }
-        val tokenIdentifierCriteria = QueryCriteria.VaultCustomQueryCriteria(identifierCriteria)
-
-        return service.vaultService.queryBy(tokenIdentifierCriteria)
-    }
-
     fun getFungiblesOfAccount(accountInfo: AccountInfo, tokenIdentifier: String) : Vault.Page<FungibleToken> {
         val identifierCriteria = builder {
-            PersistentNonFungibleToken::tokenIdentifier.equal(tokenIdentifier)
+            PersistentFungibleToken::tokenIdentifier.equal(tokenIdentifier)
         }
 
         val tokenIdentifierCriteria = QueryCriteria.VaultCustomQueryCriteria(identifierCriteria)
@@ -79,7 +61,7 @@ open class VaultCommonQueryService(val service: AppServiceHub) : SingletonSerial
         val heldByAccount: QueryCriteria = QueryCriteria.VaultQueryCriteria()
             .withExternalIds(listOf(accountInfo.identifier.id)).and(tokenIdentifierCriteria)
 
-        return service.vaultService.queryBy(heldByAccount)
+        return getStatesWithCriteria(heldByAccount)
     }
 
     fun getNonFungiblesOfAccount(accountInfo: AccountInfo, tokenIdentifier: String) : Vault.Page<NonFungibleToken> {
@@ -92,7 +74,7 @@ open class VaultCommonQueryService(val service: AppServiceHub) : SingletonSerial
         val heldByAccount: QueryCriteria = QueryCriteria.VaultQueryCriteria()
             .withExternalIds(listOf(accountInfo.identifier.id)).and(tokenIdentifierCriteria)
 
-        return service.vaultService.queryBy(heldByAccount)
+        return getStatesWithCriteria(heldByAccount)
     }
 
 }

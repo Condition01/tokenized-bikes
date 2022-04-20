@@ -1,15 +1,20 @@
 package br.com.tokenizedbikes.flows.bikecoins
 
+import br.com.tokenizedbikes.flows.accounts.GetAccountPubKey
 import br.com.tokenizedbikes.flows.bikecoins.models.BikeCoinMoveFlowResponse
 import co.paralleluniverse.fibers.Suspendable
+import com.r3.corda.lib.accounts.contracts.states.AccountInfo
+import com.r3.corda.lib.accounts.workflows.internal.flows.createKeyForAccount
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.of
 import com.r3.corda.lib.tokens.workflows.flows.move.addMoveFungibleTokens
 import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.UpdateDistributionListFlow
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.ObserverAwareFinalityFlow
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.ObserverAwareFinalityFlowHandler
+import com.r3.corda.lib.tokens.workflows.utilities.ourSigningKeys
 import net.corda.core.flows.*
-import net.corda.core.identity.Party
+import net.corda.core.node.services.Vault
+import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.TransactionBuilder
 
 object MoveBikeCoinsFlow {
@@ -20,7 +25,8 @@ object MoveBikeCoinsFlow {
         val amount: Double,
         val tokenIdentifierString: String,
         val fractionDigits: Int,
-        val newHolder: Party
+        val holderAccountInfo: AccountInfo,
+        val newHolderAccountInfo: AccountInfo
     ) : FlowLogic<BikeCoinMoveFlowResponse>() {
 
         @Suspendable
@@ -28,7 +34,16 @@ object MoveBikeCoinsFlow {
 
             val notary = serviceHub.networkMapCache.notaryIdentities[0]
 
-            val session = initiateFlow(newHolder)
+            val holderParty = serviceHub.createKeyForAccount(holderAccountInfo)
+
+            val newHolderParty = subFlow(GetAccountPubKey(newHolderAccountInfo))
+
+            val coinSelectionCriteria = QueryCriteria.VaultQueryCriteria(
+                status = Vault.StateStatus.UNCONSUMED,
+                externalIds = listOf(holderAccountInfo.identifier.id)
+            )
+
+            val session = initiateFlow(newHolderAccountInfo.host)
 
             val txBuilder = TransactionBuilder(notary = notary)
 
@@ -36,11 +51,11 @@ object MoveBikeCoinsFlow {
 
             val amountOfBikeCoins = amount of tokenIdentifier
 
-            addMoveFungibleTokens(txBuilder, serviceHub, amountOfBikeCoins, newHolder, ourIdentity)
+            addMoveFungibleTokens(txBuilder, serviceHub, amountOfBikeCoins, newHolderParty, holderParty, coinSelectionCriteria)
 
-            val ptx = serviceHub.signInitialTransaction(txBuilder)
+            val signers = txBuilder.toLedgerTransaction(serviceHub).ourSigningKeys(serviceHub) + ourIdentity.owningKey
 
-            val stx = subFlow(CollectSignaturesFlow(ptx, listOf(session)))
+            val stx = serviceHub.signInitialTransaction(txBuilder, signers)
 
             subFlow(ObserverAwareFinalityFlow(stx, listOf(session)))
 
@@ -51,7 +66,7 @@ object MoveBikeCoinsFlow {
                 amount = amount,
                 tokenType = tokenIdentifier,
                 oldHolderName = ourIdentity.name.organisation,
-                newHolderName = newHolder.name.organisation
+                newHolderName = newHolderAccountInfo.name
             )
         }
 

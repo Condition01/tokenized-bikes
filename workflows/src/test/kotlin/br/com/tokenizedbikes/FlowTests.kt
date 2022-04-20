@@ -52,12 +52,14 @@ open class FlowTests {
         network.stopNodes()
     }
 
-    fun createAccount(mockNet: MockNetwork, accountService: KeyManagementBackedAccountService, name: String): StateAndRef<AccountInfo> {
+    fun createAccount(mockNet: MockNetwork, node: StartedMockNode, name: String): AccountInfo {
+        val accountService = node.services.cordaService(KeyManagementBackedAccountService::class.java)
+
         val accountFuture = accountService.createAccount(name)
 
         mockNet.runNetwork()
 
-        return accountFuture.getOrThrow()
+        return accountFuture.getOrThrow().state.data
     }
 
     fun <T> StartedMockNode.runFlow(logic: FlowLogic<T>): CordaFuture<T> {

@@ -10,18 +10,20 @@ class IssueBikeCoinTest: FlowTests() {
 
     @Test
     fun `Coin Issue - Vanilla Test`() {
+        val accountState = createAccount(network, nodeB, "Alice")
+
         val bikeIssueFlow = IssueBikeCoinsFlow(
             amount = 10000.00,
             tokenIdentifier = "BCT",
             fractionDigits = 2,
-            holder = nodeB.info.legalIdentities[0]
+            holderAccountInfo = accountState
         )
 
         val result = nodeA.runFlow(bikeIssueFlow).getOrThrow()
 
         val vaultCommonQueryService = nodeB.services.cordaService(VaultCommonQueryService::class.java)
 
-        val fungibles = vaultCommonQueryService.getFungibleTokensByIdentifier(result.tokenType.tokenIdentifier)
+        val fungibles = vaultCommonQueryService.getFungiblesOfAccount(accountState, result.tokenType.tokenIdentifier)
 
         assert(fungibles.states.isNotEmpty())
     }

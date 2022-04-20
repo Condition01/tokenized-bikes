@@ -1,25 +1,18 @@
 package br.com.tokenizedbikes.flows.biketoken
 
+import br.com.tokenizedbikes.flows.accounts.GetAccountPubKey
 import br.com.tokenizedbikes.flows.biketoken.models.BikeIssueFlowResponse
 import br.com.tokenizedbikes.service.VaultBikeTokenQueryService
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.accounts.contracts.states.AccountInfo
-import com.r3.corda.lib.accounts.workflows.flows.RequestKeyForAccount
-import com.r3.corda.lib.accounts.workflows.internal.flows.createKeyForAccount
-import com.r3.corda.lib.tokens.contracts.types.TokenType
-import com.r3.corda.lib.tokens.contracts.utilities.heldBy
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
 import com.r3.corda.lib.tokens.workflows.flows.evolvable.UpdateEvolvableTokenFlow
-import com.r3.corda.lib.tokens.workflows.flows.issue.IssueTokensFlow
-import com.r3.corda.lib.tokens.workflows.flows.issue.IssueTokensFlowHandler
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
 import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.UpdateDistributionListFlow
 import com.r3.corda.lib.tokens.workflows.utilities.heldBy
-import net.corda.core.contracts.Amount
 import net.corda.core.flows.*
 import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
-import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.ProgressTracker
 
 @StartableByRPC
@@ -81,19 +74,11 @@ class IssueBikeTokenFlow(
 
         val bikeTokenPointer = tokenUpdatedWithIssuer.toPointer(bikeTokenType.javaClass)
 
-        /* Issuing token to Account Anonymous Party */
-
         val bikeIssuedTokenType = bikeTokenPointer issuedBy ourIdentity
 
-        val accountKey = if (holderAccountInfo.host == ourIdentity) {
-            serviceHub.createKeyForAccount(holderAccountInfo).owningKey
-        } else {
-            subFlow(RequestKeyForAccount(holderAccountInfo)).owningKey
-        }
+        val holderParty = subFlow(GetAccountPubKey(holderAccountInfo))
 
-        val bikeToken = bikeIssuedTokenType heldBy AnonymousParty(accountKey)
-
-        /* */
+        val bikeToken = bikeIssuedTokenType heldBy holderParty
 
         progressTracker.currentStep = CALLING_ISSUE_FLOW
 

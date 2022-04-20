@@ -1,7 +1,11 @@
 package br.com.tokenizedbikes.flows.bikecoins
 
+import br.com.tokenizedbikes.flows.accounts.GetAccountPubKey
 import br.com.tokenizedbikes.flows.bikecoins.models.BikeCoinIssueFlowResponse
 import co.paralleluniverse.fibers.Suspendable
+import com.r3.corda.lib.accounts.contracts.states.AccountInfo
+import com.r3.corda.lib.accounts.workflows.flows.RequestKeyForAccount
+import com.r3.corda.lib.accounts.workflows.internal.flows.createKeyForAccount
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.heldBy
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
@@ -9,6 +13,7 @@ import com.r3.corda.lib.tokens.contracts.utilities.of
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.StartableByRPC
+import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
 import net.corda.core.utilities.ProgressTracker
 
@@ -17,7 +22,7 @@ class IssueBikeCoinsFlow(
     private val amount: Double,
     private val tokenIdentifier: String,
     private val fractionDigits: Int,
-    private val holder: Party,
+    private val holderAccountInfo: AccountInfo,
     private var observers: List<Party> = emptyList()
 ) : FlowLogic<BikeCoinIssueFlowResponse>() {
 
@@ -39,7 +44,9 @@ class IssueBikeCoinsFlow(
 
         val tokenIdentifier = TokenType(tokenIdentifier, fractionDigits)
 
-        val fungibleToken = amount of tokenIdentifier issuedBy ourIdentity heldBy holder
+        val holderParty = subFlow(GetAccountPubKey(holderAccountInfo))
+
+        val fungibleToken = amount of tokenIdentifier issuedBy ourIdentity heldBy holderParty
 
         progressTracker.currentStep = CALLING_ISSUE_FLOW
 
@@ -50,7 +57,7 @@ class IssueBikeCoinsFlow(
             amount = amount,
             tokenType = tokenIdentifier,
             issuer = ourIdentity,
-            holder = holder
+            holder = holderParty
         )
     }
 }
