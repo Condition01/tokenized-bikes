@@ -8,7 +8,7 @@ import net.corda.core.flows.FlowLogic
 import net.corda.core.identity.AnonymousParty
 import java.security.PublicKey
 
-class GetAccountPubKey(val accountInfo: AccountInfo): FlowLogic<AnonymousParty>() {
+class GetAccountPubKeyAndEncapsulate(val accountInfo: AccountInfo): FlowLogic<AnonymousParty>() {
     @Suspendable
     override fun call(): AnonymousParty {
         return if (accountInfo.host == ourIdentity) {

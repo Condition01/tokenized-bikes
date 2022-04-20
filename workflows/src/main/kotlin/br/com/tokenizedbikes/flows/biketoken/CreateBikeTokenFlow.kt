@@ -62,7 +62,8 @@ class CreateBikeTokenFlow(
 
         return BaseBikeFlowResponse(
             txId =  stx.id.toHexString(),
-            bikeSerialNumber = bikeState.serialNumber
+            bikeSerialNumber = bikeState.serialNumber,
+            bikeTokenLinearId = bikeState.linearId
         )
     }
 

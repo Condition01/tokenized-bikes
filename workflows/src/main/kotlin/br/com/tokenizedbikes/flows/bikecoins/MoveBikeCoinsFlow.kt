@@ -1,6 +1,6 @@
 package br.com.tokenizedbikes.flows.bikecoins
 
-import br.com.tokenizedbikes.flows.accounts.GetAccountPubKey
+import br.com.tokenizedbikes.flows.accounts.GetAccountPubKeyAndEncapsulate
 import br.com.tokenizedbikes.flows.bikecoins.models.BikeCoinMoveFlowResponse
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.accounts.contracts.states.AccountInfo
@@ -12,6 +12,7 @@ import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.UpdateDistr
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.ObserverAwareFinalityFlow
 import com.r3.corda.lib.tokens.workflows.internal.flows.finality.ObserverAwareFinalityFlowHandler
 import com.r3.corda.lib.tokens.workflows.utilities.ourSigningKeys
+import net.corda.core.contracts.requireThat
 import net.corda.core.flows.*
 import net.corda.core.node.services.Vault
 import net.corda.core.node.services.vault.QueryCriteria
@@ -31,12 +32,13 @@ object MoveBikeCoinsFlow {
 
         @Suspendable
         override fun call(): BikeCoinMoveFlowResponse {
+            requireThat {"Actual holder account doesn't exist" using (holderAccountInfo.host == ourIdentity) }
 
             val notary = serviceHub.networkMapCache.notaryIdentities[0]
 
             val holderParty = serviceHub.createKeyForAccount(holderAccountInfo)
 
-            val newHolderParty = subFlow(GetAccountPubKey(newHolderAccountInfo))
+            val newHolderParty = subFlow(GetAccountPubKeyAndEncapsulate(newHolderAccountInfo))
 
             val coinSelectionCriteria = QueryCriteria.VaultQueryCriteria(
                 status = Vault.StateStatus.UNCONSUMED,

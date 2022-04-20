@@ -59,7 +59,8 @@ object UpdateBikeTokenFlow {
 
             return BaseBikeFlowResponse(
                 txId =  stx.id.toHexString(),
-                bikeSerialNumber = outputState.serialNumber
+                bikeSerialNumber = outputState.serialNumber,
+                bikeTokenLinearId = outputState.linearId
             )
         }
 

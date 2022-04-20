@@ -14,8 +14,10 @@ class MoveBikeCoinTest: FlowTests() {
     @Test
     fun `Coin Move - Vanilla Test`() {
         val accountStateNodeB = createAccount(network, nodeB, "Alice")
-
         val accountStateNodeC = createAccount(network, nodeC, "Bob")
+
+        val nodeBQueryService = nodeB.services.cordaService(VaultCommonQueryService::class.java)
+        val nodeCQueryService = nodeC.services.cordaService(VaultCommonQueryService::class.java)
 
         val bikeIssueFlow = IssueBikeCoinsFlow(
             amount = 10000.00,
@@ -24,11 +26,9 @@ class MoveBikeCoinTest: FlowTests() {
             holderAccountInfo = accountStateNodeB
         )
 
-        val result = nodeA.runFlow(bikeIssueFlow).getOrThrow()
+        val resultBikeCoinIssue = nodeA.runFlow(bikeIssueFlow).getOrThrow()
 
-        val vaultCommonQueryService = nodeB.services.cordaService(VaultCommonQueryService::class.java)
-
-        var fungiblesNodeB = vaultCommonQueryService.getFungiblesOfAccount(accountStateNodeB, result.tokenType.tokenIdentifier)
+        var fungiblesNodeB = nodeBQueryService.getFungiblesOfAccount(accountStateNodeB, resultBikeCoinIssue.tokenType.tokenIdentifier)
 
         assert(fungiblesNodeB.states.isNotEmpty())
         assertEquals(1000000, fungiblesNodeB.states[0].state.data.amount.quantity)
@@ -43,14 +43,12 @@ class MoveBikeCoinTest: FlowTests() {
 
         val result2 = nodeB.runFlow(moveCoinFlow).getOrThrow()
 
-        val vaultCommonQueryServiceNodeC = nodeC.services.cordaService(VaultCommonQueryService::class.java)
-
-        val fungiblesNodeC = vaultCommonQueryServiceNodeC.getFungiblesOfAccount(accountStateNodeC, result2.tokenType.tokenIdentifier)
+        val fungiblesNodeC = nodeCQueryService.getFungiblesOfAccount(accountStateNodeC, result2.tokenType.tokenIdentifier)
 
         assert(fungiblesNodeC.states.isNotEmpty())
         assertEquals(500000, fungiblesNodeC.states[0].state.data.amount.quantity)
 
-        fungiblesNodeB = vaultCommonQueryService.getFungiblesOfAccount(accountStateNodeB, result.tokenType.tokenIdentifier)
+        fungiblesNodeB = nodeBQueryService.getFungiblesOfAccount(accountStateNodeB, resultBikeCoinIssue.tokenType.tokenIdentifier)
         assert(fungiblesNodeB.states.isNotEmpty())
         assertEquals(500000, fungiblesNodeC.states[0].state.data.amount.quantity)
     }
@@ -60,6 +58,8 @@ class MoveBikeCoinTest: FlowTests() {
         val accountStateNodeB = createAccount(network, nodeB, "Alice")
         val accountStateNodeC = createAccount(network, nodeC, "Bob")
 
+        val nodeBQueryService = nodeB.services.cordaService(VaultCommonQueryService::class.java)
+
         val bikeIssueFlow = IssueBikeCoinsFlow(
             amount = 10000.00,
             tokenIdentifier = "BCT",
@@ -67,14 +67,12 @@ class MoveBikeCoinTest: FlowTests() {
             holderAccountInfo = accountStateNodeB
         )
 
-        val result = nodeA.runFlow(bikeIssueFlow).getOrThrow()
+        val resultBikeCoinIssue = nodeA.runFlow(bikeIssueFlow).getOrThrow()
 
-        val vaultCommonQueryService = nodeB.services.cordaService(VaultCommonQueryService::class.java)
+        val fungiblesNodeB = nodeBQueryService.getFungiblesOfAccount(accountStateNodeB, resultBikeCoinIssue.tokenType.tokenIdentifier)
 
-        val fungibles = vaultCommonQueryService.getFungiblesOfAccount(accountStateNodeB, result.tokenType.tokenIdentifier)
-
-        assert(fungibles.states.isNotEmpty())
-        assertEquals(1000000, fungibles.states[0].state.data.amount.quantity)
+        assert(fungiblesNodeB.states.isNotEmpty())
+        assertEquals(1000000, fungiblesNodeB.states[0].state.data.amount.quantity)
 
         val moveCoinFlow = MoveBikeCoinsFlow.MoveBikeCoinInitiatingFlow(
             amount = 5000.43,
@@ -84,11 +82,11 @@ class MoveBikeCoinTest: FlowTests() {
             newHolderAccountInfo = accountStateNodeC
         )
 
-        val result2 = nodeB.runFlow(moveCoinFlow).getOrThrow()
+        val resultBikeCoinMove = nodeB.runFlow(moveCoinFlow).getOrThrow()
 
         val vaultCommonQueryServiceNodeC = nodeC.services.cordaService(VaultCommonQueryService::class.java)
 
-        val fungiblesNodeC = vaultCommonQueryServiceNodeC.getFungiblesOfAccount(accountStateNodeC, result2.tokenType.tokenIdentifier)
+        val fungiblesNodeC = vaultCommonQueryServiceNodeC.getFungiblesOfAccount(accountStateNodeC, resultBikeCoinMove.tokenType.tokenIdentifier)
 
         assert(fungiblesNodeC.states.isNotEmpty())
         assertEquals(500043, fungiblesNodeC.states[0].state.data.amount.quantity)
@@ -100,6 +98,8 @@ class MoveBikeCoinTest: FlowTests() {
         val accountStateNodeB2 = createAccount(network, nodeB, "AliceTwo")
         val accountStateNodeC = createAccount(network, nodeC, "Bob")
 
+        val nodeBQueryService = nodeB.services.cordaService(VaultCommonQueryService::class.java)
+
         val bikeIssueFlow = IssueBikeCoinsFlow(
             amount = 10000.00,
             tokenIdentifier = "BCT",
@@ -107,7 +107,7 @@ class MoveBikeCoinTest: FlowTests() {
             holderAccountInfo = accountStateNodeB
         )
 
-        val result = nodeA.runFlow(bikeIssueFlow).getOrThrow()
+        val resultBikeCoinIssue = nodeA.runFlow(bikeIssueFlow).getOrThrow()
 
         val bikeIssueFlow2 = IssueBikeCoinsFlow(
             amount = 10000.00,
@@ -118,9 +118,7 @@ class MoveBikeCoinTest: FlowTests() {
 
         nodeA.runFlow(bikeIssueFlow2).getOrThrow()
 
-        val vaultCommonQueryService = nodeB.services.cordaService(VaultCommonQueryService::class.java)
-
-        val fungibles = vaultCommonQueryService.getFungiblesOfAccount(accountStateNodeB, result.tokenType.tokenIdentifier)
+        val fungibles = nodeBQueryService.getFungiblesOfAccount(accountStateNodeB, resultBikeCoinIssue.tokenType.tokenIdentifier)
 
         assert(fungibles.states.isNotEmpty())
         assertEquals(1000000, fungibles.states[0].state.data.amount.quantity)

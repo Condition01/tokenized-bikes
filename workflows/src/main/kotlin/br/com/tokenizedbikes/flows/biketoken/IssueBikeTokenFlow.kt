@@ -1,6 +1,6 @@
 package br.com.tokenizedbikes.flows.biketoken
 
-import br.com.tokenizedbikes.flows.accounts.GetAccountPubKey
+import br.com.tokenizedbikes.flows.accounts.GetAccountPubKeyAndEncapsulate
 import br.com.tokenizedbikes.flows.biketoken.models.BikeIssueFlowResponse
 import br.com.tokenizedbikes.service.VaultBikeTokenQueryService
 import co.paralleluniverse.fibers.Suspendable
@@ -11,7 +11,6 @@ import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
 import com.r3.corda.lib.tokens.workflows.internal.flows.distribution.UpdateDistributionListFlow
 import com.r3.corda.lib.tokens.workflows.utilities.heldBy
 import net.corda.core.flows.*
-import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
 import net.corda.core.utilities.ProgressTracker
 
@@ -76,7 +75,7 @@ class IssueBikeTokenFlow(
 
         val bikeIssuedTokenType = bikeTokenPointer issuedBy ourIdentity
 
-        val holderParty = subFlow(GetAccountPubKey(holderAccountInfo))
+        val holderParty = subFlow(GetAccountPubKeyAndEncapsulate(holderAccountInfo))
 
         val bikeToken = bikeIssuedTokenType heldBy holderParty
 
@@ -89,7 +88,8 @@ class IssueBikeTokenFlow(
         return BikeIssueFlowResponse(
             txId = stx.id.toHexString(),
             bikeSerialNumber = serialNumber,
-            holderName = holderAccountInfo.name
+            holderName = holderAccountInfo.name,
+            bikeTokenLinearId = bikeStateAndRef.state.data.linearId
         )
     }
 

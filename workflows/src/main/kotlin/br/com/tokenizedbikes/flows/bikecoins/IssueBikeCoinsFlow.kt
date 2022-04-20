@@ -1,11 +1,9 @@
 package br.com.tokenizedbikes.flows.bikecoins
 
-import br.com.tokenizedbikes.flows.accounts.GetAccountPubKey
+import br.com.tokenizedbikes.flows.accounts.GetAccountPubKeyAndEncapsulate
 import br.com.tokenizedbikes.flows.bikecoins.models.BikeCoinIssueFlowResponse
 import co.paralleluniverse.fibers.Suspendable
 import com.r3.corda.lib.accounts.contracts.states.AccountInfo
-import com.r3.corda.lib.accounts.workflows.flows.RequestKeyForAccount
-import com.r3.corda.lib.accounts.workflows.internal.flows.createKeyForAccount
 import com.r3.corda.lib.tokens.contracts.types.TokenType
 import com.r3.corda.lib.tokens.contracts.utilities.heldBy
 import com.r3.corda.lib.tokens.contracts.utilities.issuedBy
@@ -13,7 +11,6 @@ import com.r3.corda.lib.tokens.contracts.utilities.of
 import com.r3.corda.lib.tokens.workflows.flows.rpc.IssueTokens
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.StartableByRPC
-import net.corda.core.identity.AnonymousParty
 import net.corda.core.identity.Party
 import net.corda.core.utilities.ProgressTracker
 
@@ -44,7 +41,7 @@ class IssueBikeCoinsFlow(
 
         val tokenIdentifier = TokenType(tokenIdentifier, fractionDigits)
 
-        val holderParty = subFlow(GetAccountPubKey(holderAccountInfo))
+        val holderParty = subFlow(GetAccountPubKeyAndEncapsulate(holderAccountInfo))
 
         val fungibleToken = amount of tokenIdentifier issuedBy ourIdentity heldBy holderParty
 
