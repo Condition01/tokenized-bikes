@@ -1,125 +1,159 @@
-//package br.com.tokenizedbikes.biketoken
-//
-//import br.com.tokenizedbikes.FlowTests
-//import br.com.tokenizedbikes.flows.bikecoins.IssueBikeCoinsFlow
-//import br.com.tokenizedbikes.flows.biketoken.*
-//import br.com.tokenizedbikes.models.BikeColor
-//import br.com.tokenizedbikes.models.BikeColorEnum
-//import br.com.tokenizedbikes.models.BikeModelDTO
-//import br.com.tokenizedbikes.service.VaultCommonQueryService
-//import br.com.tokenizedbikes.states.BikeTokenState
-//import net.corda.core.identity.Party
-//import net.corda.core.node.services.queryBy
-//import net.corda.core.utilities.getOrThrow
-//import net.corda.testing.node.StartedMockNode
-//import org.junit.Test
-//import org.junit.jupiter.api.assertThrows
-//import java.lang.Exception
-//import kotlin.test.assertNotNull
-//
-//class PurchaseBikeTokensTest: FlowTests() {
-//
-//    private fun issueBikeTokenForNode(node: StartedMockNode): String {
-//        val bikeColor = BikeColor(
-//            mainColor = BikeColorEnum.GREEN,
-//            colorDescription = "None",
-//            isCustomColor = false
-//        )
-//
-//        val bikeDTO = BikeModelDTO(
-//            brand = "Cannondale",
-//            modelName = "Habit Carbon 1",
-//            percentOfConservation = 200.00,
-//            year = 2021,
-//            color = bikeColor,
-//            bikeImageURL = "https://bikeshopbarigui.com.br/upload/estoque/produto/principal-6206-604e687b067f4-cannondale-habit-1.jpg",
-//            serialNumber = "21312AAAs",
-//            dollarPrice = 200.00,
-//            coinPrice = 100.00,
-//            isNew = true
-//        )
-//
-//        val bikeFlow = CreateBikeTokenFlow(bikeDTO)
-//        node.runFlow(bikeFlow).getOrThrow()
-//
-//        val issueBikeFlow = IssueBikeTokenFlow("21312AAAs", node.info.legalIdentities.first())
-//        node.runFlow(issueBikeFlow).getOrThrow()
-//
-//        return bikeDTO.serialNumber
-//    }
-//
-//    private fun issueCoinsForNode(node: StartedMockNode) {
-//        val bikeIssueFlow = IssueBikeCoinsFlow(
-//            amount = 10000.00,
-//            tokenIdentifier = "BCT",
-//            fractionDigits = 2,
-//            holder = node.info.legalIdentities[0]
-//        )
-//
-//        nodeA.runFlow(bikeIssueFlow).getOrThrow()
-//    }
-//
-//    private fun issueOneCoinForNode(node: StartedMockNode) {
-//        val bikeIssueFlow = IssueBikeCoinsFlow(
-//            amount = 1.00,
-//            tokenIdentifier = "BCT",
-//            fractionDigits = 2,
-//            holder = node.info.legalIdentities[0]
-//        )
-//
-//        nodeA.runFlow(bikeIssueFlow).getOrThrow()
-//    }
-//
-//    @Test
-//    fun `Token Purchase - Vanilla Test`() {
-//        val serialNumber = issueBikeTokenForNode(nodeB)
-//        issueCoinsForNode(nodeC)
-//
-//        val bikeStateAndRefAfterUpdate = nodeC.services.vaultService.queryBy<BikeTokenState>().states
-//            .filter { it.state.data.serialNumber == serialNumber }
-//
-//        assert(bikeStateAndRefAfterUpdate.isEmpty())
-//
-//        val bikePurchaseFlow = BikePurchaseFlow.BikePurchaseInitiatingFlow(
-//            bikeSerialNumber = serialNumber,
-//            tokenIdentifierString = "BCT",
-//            fractionDigits = 2,
-//            seller = nodeB.info.legalIdentities[0]
-//        )
-//
-//        val sale = nodeC.runFlow(bikePurchaseFlow).getOrThrow()
-//
-//        val bikeStateAndRefAfterUpdate2 = nodeC.services.vaultService.queryBy<BikeTokenState>().states
-//            .filter { it.state.data.serialNumber == sale.bikeSerialNumber }
-//
-//        assert(bikeStateAndRefAfterUpdate2.isNotEmpty())
-//    }
-//
-//    @Test
-//    fun `Token Purchase - No funds Test`() {
-//        val serialNumber = issueBikeTokenForNode(nodeB)
-//        issueOneCoinForNode(nodeC)
-//
-//        val bikeStateAndRefAfterUpdate = nodeC.services.vaultService.queryBy<BikeTokenState>().states
-//            .filter { it.state.data.serialNumber == serialNumber }
-//
-//        assert(bikeStateAndRefAfterUpdate.isEmpty())
-//
-//        val bikePurchaseFlow = BikePurchaseFlow.BikePurchaseInitiatingFlow(
-//            bikeSerialNumber = serialNumber,
-//            tokenIdentifierString = "BCT",
-//            fractionDigits = 2,
-//            seller = nodeB.info.legalIdentities[0]
-//        )
-//
-//        assertThrows<Exception> {
-//            nodeC.runFlow(bikePurchaseFlow).getOrThrow()
-//        }
-//
-//        val bikeStateAndRefAfterUpdate2 = nodeC.services.vaultService.queryBy<BikeTokenState>().states
-//            .filter { it.state.data.serialNumber == serialNumber }
-//
-//        assert(bikeStateAndRefAfterUpdate2.isEmpty())
-//    }
-//
-//}
+package br.com.tokenizedbikes.biketoken
+
+import br.com.tokenizedbikes.flows.biketoken.BikePurchaseFlow
+import br.com.tokenizedbikes.service.VaultCommonQueryService
+import net.corda.core.utilities.getOrThrow
+import org.junit.Test
+import org.junit.jupiter.api.assertThrows
+import kotlin.test.assertEquals
+
+class PurchaseBikeTokensTest: CommercializationTests() {
+
+    @Test
+    fun `Token Purchase - Vanilla Test`() {
+        val accountStateNodeB = createAccount(network, nodeB, "Alice")
+        val accountStateNodeC = createAccount(network, nodeC, "Bob")
+
+        val nodeBQueryService = nodeB.services.cordaService(VaultCommonQueryService::class.java)
+        val nodeCQueryService = nodeC.services.cordaService(VaultCommonQueryService::class.java)
+
+        val bikeIssueResponse = issueBikeToAccount(accountStateNodeB)
+        val bikeCoinIssueResponse = issueCoinsToAccount(accountStateNodeC)
+
+        var nodeCBikeStatePointers = nodeCQueryService.getNonFungiblesOfAccount(accountInfo = accountStateNodeC,
+            tokenIdentifier = bikeIssueResponse.bikeTokenLinearId.toString())
+        var nodeBBikeStatePointers = nodeBQueryService.getNonFungiblesOfAccount(accountInfo = accountStateNodeB,
+            tokenIdentifier = bikeIssueResponse.bikeTokenLinearId.toString())
+        var nodeBBikeCoins = nodeBQueryService.getFungiblesOfAccount(accountInfo = accountStateNodeB,
+            tokenIdentifier = bikeCoinIssueResponse.tokenType.tokenIdentifier)
+        var nodeCBikeCoins = nodeCQueryService.getFungiblesOfAccount(accountInfo = accountStateNodeC,
+            tokenIdentifier = bikeCoinIssueResponse.tokenType.tokenIdentifier)
+
+        assert(nodeBBikeStatePointers.states.isNotEmpty())
+        assert(nodeCBikeStatePointers.states.isEmpty())
+        assert(nodeCBikeCoins.states.isNotEmpty())
+        assert(nodeBBikeCoins.states.isEmpty())
+        assertEquals(1000000, nodeCBikeCoins.states[0].state.data.amount.quantity)
+
+        val bikePurchaseFlow = BikePurchaseFlow.BikePurchaseInitiatingFlow(
+            bikeSerialNumber = bikeIssueResponse.bikeSerialNumber,
+            tokenIdentifierString = "BCT",
+            fractionDigits = 2,
+            sellerAccount = accountStateNodeB,
+            buyerAccount = accountStateNodeC
+        )
+
+        val resultBikePurchase = nodeC.runFlow(bikePurchaseFlow).getOrThrow()
+
+        nodeCBikeStatePointers = nodeCQueryService.getNonFungiblesOfAccount(accountInfo = accountStateNodeC,
+            tokenIdentifier = resultBikePurchase.bikeTokenLinearId.toString())
+        nodeBBikeStatePointers = nodeBQueryService.getNonFungiblesOfAccount(accountInfo = accountStateNodeB,
+            tokenIdentifier = resultBikePurchase.bikeTokenLinearId.toString())
+        nodeBBikeCoins = nodeBQueryService.getFungiblesOfAccount(accountInfo = accountStateNodeB,
+            tokenIdentifier = bikeCoinIssueResponse.tokenType.tokenIdentifier)
+        nodeCBikeCoins = nodeCQueryService.getFungiblesOfAccount(accountInfo = accountStateNodeC,
+            tokenIdentifier = bikeCoinIssueResponse.tokenType.tokenIdentifier)
+
+        assert(nodeCBikeStatePointers.states.isNotEmpty())
+        assert(nodeBBikeStatePointers.states.isEmpty())
+        assert(nodeCBikeCoins.states.isNotEmpty())
+        assert(nodeBBikeCoins.states.isNotEmpty())
+        assertEquals(990000, nodeCBikeCoins.states[0].state.data.amount.quantity)
+        assertEquals(10000, nodeBBikeCoins.states[0].state.data.amount.quantity)
+    }
+
+    @Test
+    fun `Token Purchase Same Node - Vanilla Test`() {
+        val aliceAccount = createAccount(network, nodeB, "Alice")
+        val bobAccount = createAccount(network, nodeB, "Bob")
+
+        val nodeBQueryService = nodeB.services.cordaService(VaultCommonQueryService::class.java)
+
+        val bikeIssueResponse = issueBikeToAccount(aliceAccount)
+        val bikeCoinIssueResponse = issueCoinsToAccount(bobAccount)
+
+        var bobStatePointers = nodeBQueryService.getNonFungiblesOfAccount(accountInfo = bobAccount,
+            tokenIdentifier = bikeIssueResponse.bikeTokenLinearId.toString())
+        var aliceStatePointers = nodeBQueryService.getNonFungiblesOfAccount(accountInfo = aliceAccount,
+            tokenIdentifier = bikeIssueResponse.bikeTokenLinearId.toString())
+        var bobCoins = nodeBQueryService.getFungiblesOfAccount(accountInfo = aliceAccount,
+            tokenIdentifier = bikeCoinIssueResponse.tokenType.tokenIdentifier)
+        var aliceCoins = nodeBQueryService.getFungiblesOfAccount(accountInfo = bobAccount,
+            tokenIdentifier = bikeCoinIssueResponse.tokenType.tokenIdentifier)
+
+        assert(aliceStatePointers.states.isNotEmpty())
+        assert(bobStatePointers.states.isEmpty())
+        assert(aliceCoins.states.isNotEmpty())
+        assert(bobCoins.states.isEmpty())
+        assertEquals(1000000, aliceCoins.states[0].state.data.amount.quantity)
+
+        val bikePurchaseFlow = BikePurchaseFlow.BikePurchaseInitiatingFlow(
+            bikeSerialNumber = bikeIssueResponse.bikeSerialNumber,
+            tokenIdentifierString = "BCT",
+            fractionDigits = 2,
+            sellerAccount = aliceAccount,
+            buyerAccount = bobAccount
+        )
+
+        val resultBikePurchase = nodeB.runFlow(bikePurchaseFlow).getOrThrow()
+
+        bobStatePointers = nodeBQueryService.getNonFungiblesOfAccount(accountInfo = bobAccount,
+            tokenIdentifier = resultBikePurchase.bikeTokenLinearId.toString())
+        aliceStatePointers = nodeBQueryService.getNonFungiblesOfAccount(accountInfo = aliceAccount,
+            tokenIdentifier = resultBikePurchase.bikeTokenLinearId.toString())
+        bobCoins = nodeBQueryService.getFungiblesOfAccount(accountInfo = aliceAccount,
+            tokenIdentifier = bikeCoinIssueResponse.tokenType.tokenIdentifier)
+        aliceCoins = nodeBQueryService.getFungiblesOfAccount(accountInfo = bobAccount,
+            tokenIdentifier = bikeCoinIssueResponse.tokenType.tokenIdentifier)
+
+        assert(bobStatePointers.states.isNotEmpty())
+        assert(aliceStatePointers.states.isEmpty())
+        assert(aliceCoins.states.isNotEmpty())
+        assert(bobCoins.states.isNotEmpty())
+        assertEquals(990000, aliceCoins.states[0].state.data.amount.quantity)
+        assertEquals(10000, bobCoins.states[0].state.data.amount.quantity)
+    }
+
+    @Test
+    fun `Token Purchase - No funds Test`() {
+        val accountStateNodeB = createAccount(network, nodeB, "Alice")
+        val accountStateNodeC = createAccount(network, nodeC, "Bob")
+
+        val bikeIssueResponse = issueBikeToAccount(accountStateNodeB)
+        issueOneCoinToAccount(accountStateNodeC)
+
+        val bikePurchaseFlow = BikePurchaseFlow.BikePurchaseInitiatingFlow(
+            bikeSerialNumber = bikeIssueResponse.bikeSerialNumber,
+            tokenIdentifierString = "BCT",
+            fractionDigits = 2,
+            sellerAccount = accountStateNodeB,
+            buyerAccount = accountStateNodeC
+        )
+
+        assertThrows<Exception> {
+            nodeC.runFlow(bikePurchaseFlow).getOrThrow()
+        }
+    }
+
+    @Test
+    fun `Token Purchase Same Node - No funds Test`() {
+        val aliceAccount = createAccount(network, nodeB, "Alice")
+        val bobAccount = createAccount(network, nodeB, "Bob")
+
+        val bikeIssueResponse = issueBikeToAccount(aliceAccount)
+        issueOneCoinToAccount(bobAccount)
+
+        val bikePurchaseFlow = BikePurchaseFlow.BikePurchaseInitiatingFlow(
+            bikeSerialNumber = bikeIssueResponse.bikeSerialNumber,
+            tokenIdentifierString = "BCT",
+            fractionDigits = 2,
+            sellerAccount = aliceAccount,
+            buyerAccount = bobAccount
+        )
+
+        assertThrows<Exception> {
+            nodeC.runFlow(bikePurchaseFlow).getOrThrow()
+        }
+    }
+
+}

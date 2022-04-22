@@ -17,6 +17,7 @@ import net.corda.core.flows.*
 import net.corda.core.node.services.Vault
 import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.TransactionBuilder
+import net.corda.core.utilities.ProgressTracker
 
 object MoveBikeTokenFlow {
 
@@ -27,9 +28,27 @@ object MoveBikeTokenFlow {
         private val newHolderAccountInfo: AccountInfo
     ) : FlowLogic<BikeMoveFlowResponse>() {
 
+        companion object {
+            object INITIATING_TRANSACTION : ProgressTracker.Step("Initiating Bike Token Move Transaction.")
+            object VERYFYING_BIKE_TOKEN : ProgressTracker.Step("Verifying if node has Bike Token reference.")
+            object GENERATING_MOVE : ProgressTracker.Step("Calling Move Flow.")
+
+            fun tracker() = ProgressTracker(
+                INITIATING_TRANSACTION,
+                VERYFYING_BIKE_TOKEN,
+                GENERATING_MOVE
+            )
+        }
+
+        override val progressTracker = tracker()
+
         @Suspendable
         override fun call(): BikeMoveFlowResponse {
-            requireThat { "The holder account doens't exist" using (holderAccountInfo.host == ourIdentity) }
+            progressTracker.currentStep = INITIATING_TRANSACTION
+
+            requireThat { "Holder account host should match the host node" using (holderAccountInfo.host == ourIdentity) }
+
+            progressTracker.currentStep = VERYFYING_BIKE_TOKEN
 
             val vaultBikeTokenQueryService = serviceHub.cordaService(VaultBikeTokenQueryService::class.java)
 
@@ -55,6 +74,8 @@ object MoveBikeTokenFlow {
                 externalIds = listOf(holderAccountInfo.identifier.id)
             )
 
+            progressTracker.currentStep = GENERATING_MOVE
+
             val stx = subFlow(MoveNonFungibleTokens(partyAndToken, listOf(), bikeTokenSelectionCriteria))
 
             return BikeMoveFlowResponse(
@@ -76,8 +97,29 @@ object MoveBikeTokenFlow {
         private val newHolderAccountInfo: AccountInfo
     ) : FlowLogic<BikeMoveFlowResponse>() {
 
+        companion object {
+            object INITIATING_TRANSACTION : ProgressTracker.Step("Initiating Bike Token Move Transaction.")
+            object VERYFYING_BIKE_TOKEN : ProgressTracker.Step("Verifying if node has Bike Token reference.")
+            object GENERATING_MOVE : ProgressTracker.Step("Calling Move Flow.")
+            object SIGNING_TRANSACTION : ProgressTracker.Step("Signing transaction with well-know public keys.")
+            object FINISHING_TRANSACTION : ProgressTracker.Step("Calling Finilaty Flow and finishing the transaction.")
+
+            fun tracker() = ProgressTracker(
+                INITIATING_TRANSACTION,
+                VERYFYING_BIKE_TOKEN,
+                GENERATING_MOVE
+            )
+        }
+
+        override val progressTracker = MoveBikeTokenSimpleFlow.tracker()
+
         @Suspendable
         override fun call(): BikeMoveFlowResponse {
+            progressTracker.currentStep = INITIATING_TRANSACTION
+
+            requireThat { "Holder account host should match the host node" using (holderAccountInfo.host == ourIdentity) }
+
+            progressTracker.currentStep = MoveBikeTokenSimpleFlow.Companion.VERYFYING_BIKE_TOKEN
 
             val vaultBikeTokenQueryService = serviceHub.cordaService(VaultBikeTokenQueryService::class.java)
 
@@ -107,6 +149,8 @@ object MoveBikeTokenFlow {
                 externalIds = listOf(holderAccountInfo.identifier.id)
             )
 
+            progressTracker.currentStep = GENERATING_MOVE
+
             addMoveNonFungibleTokens(
                 txBuilder,
                 serviceHub,
@@ -115,9 +159,13 @@ object MoveBikeTokenFlow {
                 bikeTokenSelectionCriteria
             )
 
+            progressTracker.currentStep = SIGNING_TRANSACTION
+
             val signers = txBuilder.toLedgerTransaction(serviceHub).ourSigningKeys(serviceHub) + ourIdentity.owningKey
 
             val stx = serviceHub.signInitialTransaction(txBuilder, signers)
+
+            progressTracker.currentStep = FINISHING_TRANSACTION
 
             subFlow(ObserverAwareFinalityFlow(stx, listOf(session)))
 
