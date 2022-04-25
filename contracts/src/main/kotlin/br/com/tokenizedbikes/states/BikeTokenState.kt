@@ -45,7 +45,7 @@ data class BikeTokenState(
                 coinPrice = bikeModelDTO.coinPrice,
                 isNew = bikeModelDTO.isNew,
                 maintainer = maintainer
-            );
+            )
         }
     }
 
