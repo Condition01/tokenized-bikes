@@ -42,7 +42,7 @@ object PersistentBikeTokenSchemaV1 : MappedSchema(
         var coinPrice: Double? = null,
         @Column(name = "bt_is_new")
         var isNew: Boolean? = null,
-        @Column(name = "bt_mantainer_name")
+        @Column(name = "bt_maintainer_name")
         var maintainer: AbstractParty? = null,
         @OneToOne(cascade = [CascadeType.ALL])
         @JoinColumn(name = "bc_id_fk", referencedColumnName = "bc_id")
